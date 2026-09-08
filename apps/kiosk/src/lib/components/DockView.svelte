@@ -32,7 +32,7 @@
   } from "$lib/dock";
   import { getHolosphere } from "$lib/holosphere";
   import { getFederationSnapshot } from "@holons/core/federation";
-  import { parseHolonAdd } from "$lib/holons";
+  import { parseHolonPaste } from "$lib/holons";
   import { t } from "$lib/i18n";
   import Modal from "./Modal.svelte";
   import FederationLens from "./FederationLens.svelte";
