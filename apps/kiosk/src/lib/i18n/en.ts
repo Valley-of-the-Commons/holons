@@ -457,6 +457,12 @@ export const en = {
   "settings.dark": "Dark",
   "settings.language": "Language",
   "settings.languageSub": "— Auto follows the holon's language",
+  "settings.tasksTab": "Tasks tab",
+  "settings.tasksTabSub": "— the backlog board; on unless you turn it off",
+  "settings.tasksTabAria": "Show the Tasks tab",
+  "settings.calendarTab": "Calendar tab",
+  "settings.calendarTabSub": "— upcoming events; on unless you turn it off",
+  "settings.calendarTabAria": "Show the Calendar tab",
   "settings.libraryTab": "Library tab",
   "settings.libraryTabSub":
     "— shows by itself when the library has items; flip to force",

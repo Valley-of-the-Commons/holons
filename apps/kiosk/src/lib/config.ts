@@ -35,6 +35,8 @@ const CHECKLISTS_KEY = "kiosk_checklists";
 const SHIFTS_KEY = "kiosk_shifts";
 const STATUS_KEY = "kiosk_status";
 const FLOWS_KEY = "kiosk_flows";
+const TASKS_KEY = "kiosk_tasks";
+const CALENDAR_KEY = "kiosk_calendar";
 const PINNED_KEY = "kiosk_pinned";
 const BRAND_NAME_KEY = "kiosk_brand_name";
 const BRAND_LOGO_KEY = "kiosk_brand_logo";
@@ -427,38 +429,50 @@ export function resolveShiftRelays(): string[] {
  */
 export function resolveShiftCoordinator(): string | null {
   const env = import.meta.env.VITE_KIOSK_SHIFT_COORDINATOR as
-    | string
-    | undefined;
+    string | undefined;
   const v = (env && String(env).trim().toLowerCase()) || "";
   return /^[0-9a-f]{64}$/.test(v) ? v : null;
 }
 
 /**
- * Whether the optional Status tab (a ranked contribution leaderboard) is shown.
- * Off by default — a caretaker opts in from Settings, since not every hub wants
- * to surface member rankings on the screen.
+ * The Tasks and Calendar tab preferences — tri-state like the optional tabs.
+ * `auto` (the default, stored as absence) follows the holon code default when
+ * one is set, else keeps the tab on, so a board that never opens Settings is
+ * unchanged. An explicit on/off wins per device.
  */
-export function resolveStatusEnabled(): boolean {
-  return persisted(STATUS_KEY) === "1";
+export function resolveTasksPref(): TabPref {
+  return resolveTabPref(TASKS_KEY);
 }
-
-/** Persist the Status-tab toggle. */
-export function setStatusEnabled(on: boolean): void {
-  persist(STATUS_KEY, on ? "1" : "0");
+export function setTasksPref(pref: TabPref): void {
+  setTabPref(TASKS_KEY, pref);
+}
+export function resolveCalendarPref(): TabPref {
+  return resolveTabPref(CALENDAR_KEY);
+}
+export function setCalendarPref(pref: TabPref): void {
+  setTabPref(CALENDAR_KEY, pref);
 }
 
 /**
- * Whether the Flows board is shown. Like Status, a pure caretaker opt-in
- * rather than content-driven: a hub with expenses still may not want its
- * finances on a screen by the door.
+ * The Status tab preference — tri-state like the others. `auto` (absence) with
+ * no holon default stays off, the historical opt-in; an explicit on/off wins.
  */
-export function resolveFlowsEnabled(): boolean {
-  return persisted(FLOWS_KEY) === "1";
+export function resolveStatusPref(): TabPref {
+  return resolveTabPref(STATUS_KEY);
+}
+export function setStatusPref(pref: TabPref): void {
+  setTabPref(STATUS_KEY, pref);
 }
 
-/** Persist the Flows-tab toggle. */
-export function setFlowsEnabled(on: boolean): void {
-  persist(FLOWS_KEY, on ? "1" : "0");
+/**
+ * The Flows board preference — tri-state like Status; `auto` with no holon
+ * default stays off.
+ */
+export function resolveFlowsPref(): TabPref {
+  return resolveTabPref(FLOWS_KEY);
+}
+export function setFlowsPref(pref: TabPref): void {
+  setTabPref(FLOWS_KEY, pref);
 }
 
 /**

@@ -468,6 +468,13 @@ export const it: Record<MessageKey, Msg> = {
   "settings.dark": "Scuro",
   "settings.language": "Lingua",
   "settings.languageSub": "— Auto segue la lingua dell'holon",
+  "settings.tasksTab": "Scheda Attività",
+  "settings.tasksTabSub":
+    "— la bacheca delle attività; attiva salvo diversa scelta",
+  "settings.tasksTabAria": "Mostra la scheda Attività",
+  "settings.calendarTab": "Scheda Calendario",
+  "settings.calendarTabSub": "— prossimi eventi; attiva salvo diversa scelta",
+  "settings.calendarTabAria": "Mostra la scheda Calendario",
   "settings.libraryTab": "Scheda Biblioteca",
   "settings.libraryTabSub":
     "— appare da sola quando la biblioteca ha oggetti; attivala per forzarla",

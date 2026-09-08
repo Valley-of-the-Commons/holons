@@ -20,8 +20,10 @@
     resolveRolesPref,
     resolveChecklistsPref,
     resolveShiftsPref,
-    resolveStatusEnabled,
-    resolveFlowsEnabled,
+    resolveStatusPref,
+    resolveFlowsPref,
+    resolveTasksPref,
+    resolveCalendarPref,
     resolveBrandName,
     resolveBrandLogo,
     resolveAccent,
@@ -57,8 +59,12 @@
     rolesPref,
     checklistsPref,
     shiftsPref,
-    statusEnabled,
-    flowsEnabled,
+    statusPref,
+    flowsPref,
+    tasksPref,
+    calendarPref,
+    holonDefaultTabs,
+    resolveHolonDefaultTabs,
     taskViewMode,
     taskSort,
     libraryViewMode,
@@ -451,8 +457,7 @@
 
   function onLocalWrite(e: Event) {
     const d = (e as CustomEvent).detail as
-      | { holon?: string; lens?: string; at?: number }
-      | undefined;
+      { holon?: string; lens?: string; at?: number } | undefined;
     if (!d?.holon || !d.at) return;
     // Writes routed to a partner holon (sourceRef) don't reliably echo when
     // federation is off — only the displayed holon's writes are probes.
@@ -517,8 +522,10 @@
     rolesPref.set(resolveRolesPref());
     checklistsPref.set(resolveChecklistsPref());
     shiftsPref.set(resolveShiftsPref());
-    statusEnabled.set(resolveStatusEnabled());
-    flowsEnabled.set(resolveFlowsEnabled());
+    statusPref.set(resolveStatusPref());
+    flowsPref.set(resolveFlowsPref());
+    tasksPref.set(resolveTasksPref());
+    calendarPref.set(resolveCalendarPref());
     taskViewMode.set(resolveTaskView());
     taskSort.set(resolveTaskSort());
     libraryViewMode.set(resolveLibraryView());
@@ -738,6 +745,11 @@
       $rolesPref !== "off",
       $checklistsPref !== "off",
     );
+
+  // The holon's code default tab set (null = none) follows the active holon, so
+  // a fresh visitor to a defaulted holon (e.g. commons.hubs.network) opens on
+  // exactly those tabs; every other holon keeps today's behavior.
+  $: holonDefaultTabs.set(resolveHolonDefaultTabs($holonIdStore));
 
   // While awaiting the first reveal, (re)arm the settle timer on every data
   // change — including the bind itself, so a holon with no data still reveals.

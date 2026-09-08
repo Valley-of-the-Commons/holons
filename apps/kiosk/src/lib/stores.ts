@@ -100,20 +100,28 @@ export const checklistsPref = writable<TabPref>("auto");
 export const shiftsPref = writable<TabPref>("auto");
 
 /**
- * Whether the optional Status tab (a ranked contribution leaderboard) is shown
- * (a caretaker opt-in, persisted in config). Toggling it adds/removes the tab in
- * `visibleTabs`; the StatusView owns its own data subscriptions, so no aggregator
- * is wired in `+layout.svelte`.
+ * Per-device preference for the Tasks and Calendar tabs. These used to be
+ * hardwired always-on; they are now the same tri-state as the optional tabs so
+ * a board can hide them. `auto` (untouched) follows the holon code default when
+ * one is set (see `holonDefaultTabs`), otherwise stays on — today's behavior.
  */
-export const statusEnabled = writable<boolean>(false);
+export const tasksPref = writable<TabPref>("auto");
+export const calendarPref = writable<TabPref>("auto");
 
 /**
- * Whether the optional Flows board (value movement + allocation) is shown.
- * Same shape as `statusEnabled`: a caretaker opt-in rather than one of the
- * tri-state content-driven prefs, because a hub can hold expenses and still not
- * want its finances on a screen by the front door. FlowsView owns its own reads.
+ * Per-device preference for the Status tab (a ranked contribution leaderboard).
+ * Tri-state like the others so it can follow a holon default; `auto` with no
+ * default stays off (the historical opt-in). `statusEnabled` below derives the
+ * actual visibility; the StatusView owns its own data subscriptions.
  */
-export const flowsEnabled = writable<boolean>(false);
+export const statusPref = writable<TabPref>("auto");
+
+/**
+ * Per-device preference for the Flows board (value movement + allocation).
+ * Tri-state like Status; `auto` with no holon default stays off. `flowsEnabled`
+ * below derives the actual visibility; FlowsView owns its own reads.
+ */
+export const flowsPref = writable<TabPref>("auto");
 
 /** Federation partner id → display name, for the per-item source chips. */
 export const partnerNames = writable<Record<string, string>>({});
@@ -384,57 +392,124 @@ export const TABS = [
 export type TabId = (typeof TABS)[number]["id"];
 
 /**
- * Whether the Library / Roles tab is actually shown: an explicit caretaker
- * choice wins; `auto` (the default) follows the content, so a hub that stocks
- * a library or defines roles gets those tabs without any setup, and an empty
- * lens doesn't waste a rotation slot. An explicitly-enabled tab shows even
- * while empty (its view has an empty state), so the board never silently drops
- * a tab the caretaker turned on.
+ * Per-holon default visible tabs, in code. When a holon is listed here, a fresh
+ * visitor with no per-device override sees exactly these tabs; every holon NOT
+ * listed keeps today's behavior. This is how commons.hubs.network opens on
+ * Calendar + Shifts without a dashboard or a relay-side setting. Keyed by holon
+ * id (see SUBDOMAIN_HOLONS in holons.ts).
  */
+export const HOLON_DEFAULT_TABS: Record<string, readonly TabId[]> = {
+  "-5459621960": ["calendar", "shifts"], // Commons Hub
+};
+
+/** The code default for a holon, or null when it has none (→ today's behavior). */
+export function resolveHolonDefaultTabs(
+  holonId: string | null,
+): TabId[] | null {
+  const d = holonId ? HOLON_DEFAULT_TABS[holonId] : undefined;
+  return d ? [...d] : null;
+}
+
+/**
+ * The active holon's code default (null = none). Set on holon change in
+ * `+layout.svelte`; the `*Enabled` stores below read it so an untouched (`auto`)
+ * tab resolves to "is it in the default?" instead of the tab's legacy rule.
+ */
+export const holonDefaultTabs = writable<TabId[] | null>(null);
+
+/**
+ * Resolve one tab's visibility from its per-device tri-state pref: `on`/`off`
+ * win; `auto` (untouched) follows the holon code default when one is set, else
+ * the tab's `legacy` rule (content-driven for optional tabs, always-on for
+ * Tasks/Calendar, off for Status/Flows). So an unconfigured board on a defaulted
+ * holon shows exactly the default, and every other holon is unchanged.
+ */
+function resolveTab(
+  pref: TabPref,
+  d: TabId[] | null,
+  id: TabId,
+  legacy: boolean,
+): boolean {
+  if (pref === "on") return true;
+  if (pref === "off") return false;
+  return d ? d.includes(id) : legacy;
+}
+
+export const tasksEnabled = derived([tasksPref, holonDefaultTabs], ([$p, $d]) =>
+  resolveTab($p, $d, "tasks", true),
+);
+export const calendarEnabled = derived(
+  [calendarPref, holonDefaultTabs],
+  ([$p, $d]) => resolveTab($p, $d, "calendar", true),
+);
 export const libraryEnabled = derived(
-  [libraryPref, rawLibrary],
-  ([$pref, $items]) =>
-    $pref === "on" || ($pref === "auto" && $items.length > 0),
+  [libraryPref, rawLibrary, holonDefaultTabs],
+  ([$p, $items, $d]) => resolveTab($p, $d, "library", $items.length > 0),
 );
 export const rolesEnabled = derived(
-  [rolesPref, rawRoles],
-  ([$pref, $items]) =>
-    $pref === "on" || ($pref === "auto" && $items.length > 0),
+  [rolesPref, rawRoles, holonDefaultTabs],
+  ([$p, $items, $d]) => resolveTab($p, $d, "roles", $items.length > 0),
 );
 export const checklistsEnabled = derived(
-  [checklistsPref, rawChecklists],
-  ([$pref, $items]) =>
-    $pref === "on" || ($pref === "auto" && $items.length > 0),
+  [checklistsPref, rawChecklists, holonDefaultTabs],
+  ([$p, $items, $d]) => resolveTab($p, $d, "checklists", $items.length > 0),
 );
 export const shiftsEnabled = derived(
-  [shiftsPref, rawShifts],
-  ([$pref, $s]) =>
-    $pref === "on" || ($pref === "auto" && $s.occurrences.length > 0),
+  [shiftsPref, rawShifts, holonDefaultTabs],
+  ([$p, $s, $d]) => resolveTab($p, $d, "shifts", $s.occurrences.length > 0),
+);
+export const statusEnabled = derived(
+  [statusPref, holonDefaultTabs],
+  ([$p, $d]) => resolveTab($p, $d, "status", false),
+);
+export const flowsEnabled = derived([flowsPref, holonDefaultTabs], ([$p, $d]) =>
+  resolveTab($p, $d, "flows", false),
 );
 
 /**
- * Tabs actually shown: Library, Lists, Roles, and Shifts per their (possibly
- * content-driven) visibility above, Status only when the caretaker enabled it.
+ * Tabs actually shown, each per its `*Enabled` resolution above. Never blank:
+ * if every tab was toggled off, fall back to the holon default (or Tasks) so the
+ * board always has something to render and rotate.
  */
 export const visibleTabs = derived(
   [
+    tasksEnabled,
+    calendarEnabled,
     libraryEnabled,
     checklistsEnabled,
     rolesEnabled,
     shiftsEnabled,
     statusEnabled,
     flowsEnabled,
+    holonDefaultTabs,
   ],
-  ([$library, $checklists, $roles, $shifts, $status, $flows]) =>
-    TABS.filter(
-      (t) =>
-        (t.id !== "library" || $library) &&
-        (t.id !== "checklists" || $checklists) &&
-        (t.id !== "roles" || $roles) &&
-        (t.id !== "shifts" || $shifts) &&
-        (t.id !== "status" || $status) &&
-        (t.id !== "flows" || $flows),
-    ),
+  ([
+    $tasks,
+    $calendar,
+    $library,
+    $checklists,
+    $roles,
+    $shifts,
+    $status,
+    $flows,
+    $d,
+  ]) => {
+    const on: Record<TabId, boolean> = {
+      tasks: $tasks,
+      calendar: $calendar,
+      shifts: $shifts,
+      library: $library,
+      checklists: $checklists,
+      roles: $roles,
+      status: $status,
+      flows: $flows,
+    };
+    const shown = TABS.filter((t) => on[t.id]);
+    if (shown.length) return shown;
+    return $d && $d.length
+      ? TABS.filter((t) => $d.includes(t.id))
+      : TABS.filter((t) => t.id === "tasks");
+  },
 );
 
 // A persisted pin from a previous session, validated against the known tabs.

@@ -17,14 +17,20 @@
     brandName,
     brandLogo,
     accent,
+    tasksEnabled,
+    calendarEnabled,
     libraryEnabled,
     rolesEnabled,
     checklistsEnabled,
     shiftsEnabled,
+    tasksPref,
+    calendarPref,
     libraryPref,
     rolesPref,
     checklistsPref,
     shiftsPref,
+    statusPref,
+    flowsPref,
     statusEnabled,
     flowsEnabled,
     settingsOpen,
@@ -40,8 +46,10 @@
     setRolesPref,
     setChecklistsPref,
     setShiftsPref,
-    setStatusEnabled,
-    setFlowsEnabled,
+    setStatusPref,
+    setFlowsPref,
+    setTasksPref,
+    setCalendarPref,
     setThemeMode,
     setLangMode,
     DEFAULT_ACCENT,
@@ -189,8 +197,19 @@
   }
 
   // Touching a tab switch records an explicit on/off. Until then the pref stays
-  // `auto` and the switch simply mirrors the tab's content-driven visibility —
-  // so a caretaker who never opens Settings keeps the automatic behaviour.
+  // `auto`: the switch mirrors the tab's resolved visibility (content-driven,
+  // or the holon default when one is set) — so a caretaker who never opens
+  // Settings keeps the automatic behaviour.
+  function commitTasks(on: boolean) {
+    setTasksPref(on ? "on" : "off");
+    tasksPref.set(on ? "on" : "off");
+  }
+
+  function commitCalendar(on: boolean) {
+    setCalendarPref(on ? "on" : "off");
+    calendarPref.set(on ? "on" : "off");
+  }
+
   function commitLibrary(on: boolean) {
     setLibraryPref(on ? "on" : "off");
     libraryPref.set(on ? "on" : "off");
@@ -221,14 +240,14 @@
       statusConfirmOpen = true;
       return;
     }
-    setStatusEnabled(false);
-    statusEnabled.set(false);
+    setStatusPref("off");
+    statusPref.set("off");
   }
 
   function confirmStatus() {
     statusConfirmOpen = false;
-    setStatusEnabled(true);
-    statusEnabled.set(true);
+    setStatusPref("on");
+    statusPref.set("on");
   }
 
   // ---- Value equation ----------------------------------------------------
@@ -316,8 +335,8 @@
   }
 
   function commitFlows(on: boolean) {
-    setFlowsEnabled(on);
-    flowsEnabled.set(on);
+    setFlowsPref(on ? "on" : "off");
+    flowsPref.set(on ? "on" : "off");
   }
 
   /** Enter on a text field commits and dismisses the on-screen keyboard. */
@@ -449,6 +468,42 @@
         </button>
       {/each}
     </div>
+  </div>
+
+  <div class="field toggle-field">
+    <span class="toggle-label"
+      >{$t("settings.tasksTab")}
+      <span class="sub">{$t("settings.tasksTabSub")}</span></span
+    >
+    <button
+      type="button"
+      class="switch"
+      class:on={$tasksEnabled}
+      role="switch"
+      aria-checked={$tasksEnabled}
+      aria-label={$t("settings.tasksTabAria")}
+      on:click={() => commitTasks(!$tasksEnabled)}
+    >
+      <span class="knob"></span>
+    </button>
+  </div>
+
+  <div class="field toggle-field">
+    <span class="toggle-label"
+      >{$t("settings.calendarTab")}
+      <span class="sub">{$t("settings.calendarTabSub")}</span></span
+    >
+    <button
+      type="button"
+      class="switch"
+      class:on={$calendarEnabled}
+      role="switch"
+      aria-checked={$calendarEnabled}
+      aria-label={$t("settings.calendarTabAria")}
+      on:click={() => commitCalendar(!$calendarEnabled)}
+    >
+      <span class="knob"></span>
+    </button>
   </div>
 
   <div class="field toggle-field">

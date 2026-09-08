@@ -467,6 +467,14 @@ export const es: Record<MessageKey, Msg> = {
   "settings.dark": "Oscuro",
   "settings.language": "Idioma",
   "settings.languageSub": "— Auto sigue el idioma del holón",
+  "settings.tasksTab": "Pestaña Tareas",
+  "settings.tasksTabSub":
+    "— el tablero de tareas; activa salvo que la desactives",
+  "settings.tasksTabAria": "Mostrar la pestaña Tareas",
+  "settings.calendarTab": "Pestaña Calendario",
+  "settings.calendarTabSub":
+    "— próximos eventos; activa salvo que la desactives",
+  "settings.calendarTabAria": "Mostrar la pestaña Calendario",
   "settings.libraryTab": "Pestaña Biblioteca",
   "settings.libraryTabSub":
     "— aparece sola cuando la biblioteca tiene objetos; actívala para forzarla",
